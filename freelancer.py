@@ -1,22 +1,33 @@
 import database
 import file_handler
+
+
 def view_projects():
     if not database.projects:
         print("No Projects Available")
         return
+    found = False
 
     for project_id, project in database.projects.items():
         if project["status"] == "Open":
+            found = True
             print("\nProject ID:", project_id)
             print("Title:", project["title"])
             print("Description:", project["description"])
             print("Budget:", project["budget"])
             print("Status:", project["status"])
 
+    if not found:
+        print("No open projects available")
+
 
 def apply_bid(freelancer_id):
     project_id = int(input("Enter Project ID: "))
     bid_amount = float(input("Enter Bid Amount: "))
+
+    if bid_amount <= 0:
+        print("Bid amount must be greater than zero")
+        return
 
     if project_id not in database.projects:
         print("Invalid Project ID")
@@ -55,6 +66,12 @@ def my_bids(freelancer_id):
             if bid["freelancer_id"] == freelancer_id:
                 found = True
                 print("\nProject ID:", project_id)
+
+                if project_id in database.projects:
+                    project = database.projects[project_id]
+                    print("Project Title:", project["title"])
+                    print("Project Status:", project["status"])
+
                 print("Bid Amount:", bid["bid_amount"])
 
     if not found:
@@ -71,6 +88,16 @@ def update_status(freelancer_id):
 
     if project_id in database.hired_projects:
         if database.hired_projects[project_id]["freelancer_id"] == freelancer_id:
+            current_status = database.projects[project_id]["status"]
+
+            if current_status == "Completed":
+                print("Project is already completed")
+                return
+
+            if status == "Completed" and current_status != "In Progress":
+                print("Project must be In Progress before marking it Completed")
+                return
+            
             database.projects[project_id]["status"] = status
             file_handler.save_data()
             print("Project Status Updated")
@@ -78,6 +105,8 @@ def update_status(freelancer_id):
             print("You are not assigned to this project")
     else:
         print("Project not assigned")
+
+
 def view_assigned_projects(freelancer_id):
     found = False
 
@@ -100,6 +129,8 @@ def view_assigned_projects(freelancer_id):
 
     if not found:
         print("No Assigned Projects")
+
+
 def view_reviews(freelancer_id):
     found = False
 
@@ -108,6 +139,10 @@ def view_reviews(freelancer_id):
             found = True
 
             print("\nProject ID:", project_id)
+
+            if project_id in database.projects:
+                print("Project Title:", database.projects[project_id]["title"])
+
             print("Rating:", review["rating"])
             print("Review:", review["review"])
 
